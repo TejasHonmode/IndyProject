@@ -143,7 +143,7 @@ const connectionOffer = async (did, recipientDid) => {
 
 const connectionRequest = async (did, recipientDid, userWalletHandle, metadata,role=null) => {
     
-    const [newDid, newKey] = await indy.createAndStoreMyDid(userWalletHandle, {})
+    let [newDid, newKey] = await indy.createAndStoreMyDid(userWalletHandle, {})
     await indy.setDidMetadata(userWalletHandle, newDid, metadata)
     console.log('POOL HANDLE,', pool.poolHandle)
     // await pool.sendNym(pool.poolHandle, userWalletHandle, did, newDid, newKey, role)
@@ -157,12 +157,24 @@ const connectionRequest = async (did, recipientDid, userWalletHandle, metadata,r
     }
 }
 
-const connectionResponse = async (did, recipientDid, userWalletHandle, theirDid,metadata) => {
 
-    const [newDid, newKey] = await indy.createAndStoreMyDid(userWalletHandle, {})
+const createPairwise = async (userWalletHandle, theirDid, myDid, metadata) => {
+    
+    await indy.createPairwise(userWalletHandle, theirDid, myDid, metadata)
+    let pairwise  = await indy.getPairwise(userWalletHandle, theirDid)
+
+    return pairwise
+}
+
+
+const connectionResponse = async (did, recipientDid, userWalletHandle, theirDid, metadata) => {
+
+    let [newDid, newKey] = await indy.createAndStoreMyDid(userWalletHandle, {})
+    console.log('Resp DId-Key created')
     await indy.setDidMetadata(userWalletHandle, newDid, metadata)
+    console.log('Resp new Did meta data set')
     let pairwise = await createPairwise(userWalletHandle, theirDid, did, metadata)
-
+    console.log('Pairwise is ', pairwise)
     return {
         did,
         newDid,
@@ -188,13 +200,7 @@ const connectionAcknowledgement = async(userWalletHandle, did, theirDid, metadat
 }
 
 
-const createPairwise = async (userWalletHandle, theirDid, myDid, metadata) => {
-    
-    await indy.createPairwise(userWalletHandle, theirDid, myDid, metadata)
-    let pairwise  = await indy.getPairwise(userWalletHandle, theirDid)
 
-    return pairwise
-}
 
 
 const createDidInfo = async (did, key, fromToKey) => {

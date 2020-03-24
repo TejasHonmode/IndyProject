@@ -229,20 +229,20 @@ router.post('/sendConnectionResponse', auth, async(req, res) => {
     // const recipient = await ConnectionRequest.findOne({recipientDid: myDid, responded: false})
     let recipientDid = req.body.recipientDid
 
-    const response = await ConnectionResponse.findOne({owner: req.user._id, did: myDid, recipientDid})
+    let response = await ConnectionResponse.findOne({owner: req.user._id, did: myDid, recipientDid})
     if(response){
         return res.send({error: 'Connection Response Already Sent'})
     }
 
 
-    let request = await ConnectionRequest.updateOne({did: recipientDid, recipientDid: myDid, responded: false}, {responded: true})
+    let request = await ConnectionRequest.findOneAndUpdate({did: recipientDid, recipientDid: myDid, responded: false}, {responded: true})
 
     try {
 
         const Response = await userFuncs.connectionResponse(myDid, recipientDid, req.user.userWalletHandle, request.newDid, req.body.metadata)
 
         const connectionResponse = new ConnectionResponse({
-            did:myDid,
+            did:Response.did,
             newDid: Response.newDid,
             newKey: Response.newKey,
             ip: Response.ip,
