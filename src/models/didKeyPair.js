@@ -25,11 +25,12 @@ const didKeyPairSchema = mongoose.Schema({
     },
     public: {
         type: Boolean,
+        default: false,
         required: true
     },
     forDid: {
         type: String,
-        default: 'me',
+        default: 'Me',
         require: true
     }
 }, {

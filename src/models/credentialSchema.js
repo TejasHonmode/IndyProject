@@ -18,7 +18,7 @@ const credentialSchema = new mongoose.Schema({
         type: String
     },
     attrNames: {
-        type: mongoose.Schema.Types.Mixed
+        type: [String]
     },
     seqNo: {
         type: mongoose.Schema.Types.Mixed

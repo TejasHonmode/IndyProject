@@ -10,10 +10,10 @@ const didInfoSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    fromToKey: {
-        type: String,
-        required: true
-    },
+    // fromToKey: {
+    //     type: String,
+    //     default: 'None'
+    // },
     owner: {
         type: mongoose.Schema.Types.ObjectId,
         required: true,
@@ -25,6 +25,11 @@ const didInfoSchema = new mongoose.Schema({
     },
     role: {
         type: String,
+        required: true
+    },
+    acknowledged:{
+        type: Boolean,
+        default: false,
         required: true
     }
 }, {

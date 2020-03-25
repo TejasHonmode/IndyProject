@@ -157,7 +157,8 @@ router.post('/sendConnectionRequest', auth,async(req, res) => {
             verkey: Request.newKey,
             metadata: req.body.metadata,
             owner: req.user._id,
-            public: false
+            public: false,
+            forDid: recipientDid
         })
 
 
@@ -235,7 +236,7 @@ router.post('/sendConnectionResponse', auth, async(req, res) => {
     }
 
 
-    let request = await ConnectionRequest.findOneAndUpdate({did: recipientDid, recipientDid: myDid, responded: false}, {responded: true})
+    let request = await ConnectionRequest.updateOne({did: recipientDid, recipientDid: myDid, responded: false}, {responded: true})
 
     try {
 
@@ -253,18 +254,19 @@ router.post('/sendConnectionResponse', auth, async(req, res) => {
         await connectionResponse.save()
 
         let didKeyPair = new DidKeyPair({
-            id: req.user.userWalletHandle,
+            id: req.user.id,
             did: Response.newDid,
             verkey: Response.newKey,
             metadata: req.body.metadata,
             owner: req.user._id,
-            public: false
+            public: false,
+            forDid: recipientDid
         })
 
         await didKeyPair.save()
 
 
-        res.send(connectionResponse, Response.metadata)
+        res.send({connectionResponse})
     } catch (e) {
         res.send(e)
     }
@@ -311,18 +313,22 @@ router.get('/pendingConnectionResponse', auth, async(req, res) => {
 router.post('/sendAcknowledgement', auth, async(req, res) => {
 
     let me = await DidKeyPair.findOne({owner: req.user._id, public: true})
-    
+    let myDid = me.did
     let recipientDid = req.body.recipientDid
 
     // let response = await ConnectionResponse({did: recipientDid, recipientDid: me.did, responded: false})
-    let response = await ConnectionResponse.findOneAndUpdate({did: recipientDid, recipientDid: me.did, acknowledged: false}, {acknowledged: true})
+    let response = await ConnectionResponse.updateOne({did: recipientDid, recipientDid: me.did, acknowledged: false}, {acknowledged: true})
+    console.log('RESPONSE ----------------->>', response)
 
-    
+    let Response = await ConnectionResponse.findOne({did: recipientDid, recipientDid: myDid, acknowledged: true})
 
-    let ack= await userFuncs.connectionAcknowledgement(req.user.userWalletHandle, me.did, response.newDid, req.body.metadata)
+
+    // let ack = await userFuncs.connectionAcknowledgement(me.did)
+    // console.log(ack)
     try {
-        let nymInfo = await pool.sendNym(pool.poolHandle, me.did, response.newDid, response.newKey)
-        res.send({response, nymInfo, ack})
+
+        let nymInfo = await pool.sendNym(pool.poolHandle, req.user.userWalletHandle, myDid, Response.newDid, Response.newKey)
+        res.send({response, Response, nymInfo, msg: 'Connected yay!!!!  UwU'})
     } catch (e) {
         res.send(e)
     }
@@ -332,13 +338,17 @@ router.post('/sendAcknowledgement', auth, async(req, res) => {
 router.post('/sendDidInfo', auth,async(req, res) => {
 
     let me = await DidKeyPair.findOne({owner: req.user._id, public: true})
-    let pairwise = new DidKeyPair.findOne({id: req.user.userWalletHandle, owner: req.user._id,public: false, forDid: req.body.recipientDid})
+    console.log('me ---------------->>>>', me);
+    
+    // let pairwise = await DidKeyPair.findOne({id: req.user.id, owner: req.user._id,public: false, forDid: req.body.recipientDid})
+    // console.log('pairwise--------------------------', pairwise);
+    
 
     try {
         let didInfo = new DidInfo({
             did: me.did,
-            key: me.verkey,
-            fromToKey: pairwise.verkey,
+            verkey: me.verkey,
+            // fromToKey: pairwise.verkey,
             owner: req.user._id,
             recipientDid: req.body.recipientDid,
             role: req.body.role
@@ -356,14 +366,24 @@ router.post('/assignRole', auth, async(req, res) => {
 
     let me = await DidKeyPair.findOne({owner: req.user._id, public: true})
 
-    let didInfo = await DidInfo.findOne({recipientDid: me.did, did: req.body.recipientDid})
+    let didInfo = await DidInfo.findOne({recipientDid: me.did, did: req.body.recipientDid, acknowledged: false})
 
-    let requestor = await DidKeyPair.findOne({did: didInfo.did, })
+    
 
-    await pool.sendNym(pool.poolHandle, req.user.userWalletHandle, me.did, didInfo.did, didInfo.key, didInfo.role)
+    // await DidInfo.updateOne({recipientDid: me.did, did: req.body.recipientDid, acknowledged: false}, {acknowledged: true})
 
     try {
-        let user = await User.findOneAndUpdate({did: didInfo.did})
+        let user = await User.updateOne({did: didInfo.did, verkey: didInfo.verkey}, {role: didInfo.role})
+
+        let nymInfo = await pool.sendNym(pool.poolHandle, req.user.userWalletHandle, me.did, didInfo.did, didInfo.key, didInfo.role)
+
+        await DidInfo.updateOne({recipientDid: me.did, did: req.body.recipientDid, acknowledged: false}, {acknowledged: true})
+
+        res.send({
+            did: didInfo.did,
+            ROLE_ASSIGNED: nymInfo.role
+        })
+
     } catch (e) {
         res.send(e)
     }

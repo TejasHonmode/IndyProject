@@ -158,13 +158,13 @@ const connectionRequest = async (did, recipientDid, userWalletHandle, metadata,r
 }
 
 
-const createPairwise = async (userWalletHandle, theirDid, myDid, metadata) => {
+// const createPairwise = async (userWalletHandle, theirDid, myDid, metadata) => {
     
-    await indy.createPairwise(userWalletHandle, theirDid, myDid, metadata)
-    let pairwise  = await indy.getPairwise(userWalletHandle, theirDid)
+//     await indy.createPairwise(userWalletHandle, theirDid, myDid, metadata)
+//     let pairwise  = await indy.getPairwise(userWalletHandle, theirDid)
 
-    return pairwise
-}
+//     return pairwise
+// }
 
 
 const connectionResponse = async (did, recipientDid, userWalletHandle, theirDid, metadata) => {
@@ -173,28 +173,27 @@ const connectionResponse = async (did, recipientDid, userWalletHandle, theirDid,
     console.log('Resp DId-Key created')
     await indy.setDidMetadata(userWalletHandle, newDid, metadata)
     console.log('Resp new Did meta data set')
-    let pairwise = await createPairwise(userWalletHandle, theirDid, did, metadata)
-    console.log('Pairwise is ', pairwise)
+    // await indy.createPairwise(userWalletHandle, theirDid, did, metadata)
+    // console.log('Pairwise created in wallet')
     return {
         did,
         newDid,
         newKey,
         ip: ip.address(),
-        recipientDid, 
-        pairwise
+        recipientDid
     }
 }
 
-const connectionAcknowledgement = async(userWalletHandle, did, theirDid, metadata, role=null) => {
+const connectionAcknowledgement = async(did) => {
 
-    // await pool.sendNym(pool.poolHandle, userWalletHandle, did, newDid, newKey, role)
+    // let nymInfo = await pool.sendNym(pool.poolHandle, userWalletHandle, did, newDid, newKey, role)
 
-    let pairwise = await createPairwise(userWalletHandle, theirDid, did, metadata)
+    // await indy.createPairwise(userWalletHandle, theirDid, did, metadata)
+    // console.log('Pairwise created in wallet')
 
     return {
         did,
         msg: 'Connected.....YAY UwU!!!', 
-        pairwise
     }
 
 }
@@ -203,14 +202,20 @@ const connectionAcknowledgement = async(userWalletHandle, did, theirDid, metadat
 
 
 
-const createDidInfo = async (did, key, fromToKey) => {
+// const createDidInfo = async (did, key, fromToKey) => {
 
-    return {
-        did: did,
-        key: key,
-        fromToKey
-    }
+//     return {
+//         did: did,
+//         key: key,
+//         fromToKey
+//     }
+// }
+
+
+const keyForDid = async(userWalletHandle, did) => {
+    verkey = await indy.keyForDid(pool.poolHandle, userWalletHandle, did)
+    return verkey
 }
 
 
-module.exports = {createUserWallet, createOrgWallet, openWallet, closeWallet, deleteWallet, createDidKey, connectionOffer, connectionRequest, connectionResponse, connectionAcknowledgement,createPairwise}
+module.exports = {createUserWallet, createOrgWallet, openWallet, closeWallet, deleteWallet, createDidKey, connectionOffer, connectionRequest, connectionResponse, connectionAcknowledgement, keyForDid}

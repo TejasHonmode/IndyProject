@@ -13,18 +13,49 @@ router.post('/createuserwallet', urlencodedParser, async(req, res) => {
     //console.log(req.body.name)
 
     try {
+
         const userWalletHandle = await userFuncs.createUserWallet(req.body.name, req.body.id, req.body.key)
-        //console.log(did_key_handle)
-        const user = new User({
-            name: req.body.name,
-            id: req.body.id,
-            key: req.body.key,
-            userWalletHandle
-        })
-        await user.save()
+
+        if(req.body.role){
+            let user = new User({
+                name: req.body.name,
+                id: req.body.id,
+                key: req.body.key,
+                userWalletHandle,
+                role: req.body.role
+            })
+
+            await user.save()
         console.log('---saved---------------')
-        const token = await user.generateAuthToken()
-        res.send({user, token})
+        let token = await user.generateAuthToken()
+        return res.send({user, token})
+
+        }else{
+            let user = new User({
+                name: req.body.name,
+                id: req.body.id,
+                key: req.body.key,
+                userWalletHandle,
+                role: req.body.role
+            })
+
+            await user.save()
+        console.log('---saved---------------')
+        let token = await user.generateAuthToken()
+        return res.send({user, token})
+        }
+        
+        //console.log(did_key_handle)
+        // const user = new User({
+        //     name: req.body.name,
+        //     id: req.body.id,
+        //     key: req.body.key,
+        //     userWalletHandle
+        // })
+        // await user.save()
+        // console.log('---saved---------------')
+        // let token = await user.generateAuthToken()
+        // res.send({user, token})
     } catch (e) {
         res.send(e)
     }
