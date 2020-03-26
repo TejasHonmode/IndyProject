@@ -6,22 +6,30 @@ const jwt = require('jsonwebtoken')
 
 const credentialSchema = new mongoose.Schema({
     ver: {
-        type: String 
+        type: String
     },
     id: {
-        type: String
+        type: String,
+        required: true
     },
     name: {
-        type: String
+        type: String,
+        required: true
     },
     version: {
-        type: String
+        type: String,
+        required: true
     },
     attrNames: {
-        type: [String]
+        type: [String],
+        required: true
     },
     seqNo: {
         type: mongoose.Schema.Types.Mixed
+    },
+    did:{
+        type: String,
+        required: true
     },
     owner: {
         type: mongoose.Schema.Types.ObjectId,
@@ -32,6 +40,6 @@ const credentialSchema = new mongoose.Schema({
     timestamps: true
 })
 
-const CredentialSchema = mongoose.model('CredentialsSchema', credentialSchema)
+const CredentialSchema = mongoose.model('CredentialSchema', credentialSchema)
 
 module.exports = CredentialSchema
