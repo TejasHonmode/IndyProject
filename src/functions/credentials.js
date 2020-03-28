@@ -11,15 +11,26 @@ const sendSchema = async (poolHandle, issuerWallet, issuerDid, credentialSchema)
 }
 
 
-const getSchema = async(poolHandle, issuerDid, credentialSchemaId) => {
+const getSchema = async(issuerDid, credentialSchemaId) => {
+    
     let getSchemaRequest = await indy.buildGetSchemaRequest(issuerDid, credentialSchemaId)
-    let getSchemaResponse = await indy.submitRequest(poolHandle, getSchemaRequest);
-    return await indy.parseGetSchemaResponse(getSchemaResponse);
+    console.log(' get Schema reqt', getSchemaRequest);
+    
+    let getSchemaResponse = await indy.submitRequest(pool.poolHandle, getSchemaRequest);
+    console.log('get schema response', getSchemaResponse);
+
+    console.log('ARGS IN GET SCHEMA---------- >');
+    console.log(issuerDid, credentialSchemaId, pool.poolHandle);
+
+    let [, schema] = await indy.parseGetSchemaResponse(getSchemaResponse);
+    console.log('GOT SCHEMA---------->',schema);
+    
+    return schema
 }
 
 
 
-const createSchema = async (issuerDid, nameOfSchema, version='1.2', ...attrNames) => {
+const createSchema = async (issuerDid, nameOfSchema, attrNames, version='1.0') => {
     console.log('In create schema func --------------->');
     console.log(issuerDid, nameOfSchema, version, attrNames)
     let [schemaId, schema] = await indy.issuerCreateSchema(issuerDid, nameOfSchema, version, attrNames)
@@ -32,6 +43,7 @@ const createSchema = async (issuerDid, nameOfSchema, version='1.2', ...attrNames
 const sendCredDef = async (poolHandle, issuerWallet, issuerDid, credDef) => {
     let credDefRequest = await indy.buildCredDefRequest(issuerDid, credDef)
     await indy.signAndSubmitRequest(poolHandle, issuerWallet, issuerDid, credDefRequest)
+    console.log('Cred def sent--------->')
     return {credDef, msg:'CredDef Sent'}
 }
 
@@ -45,6 +57,8 @@ const getCredDef = async (poolHandle, issuerDid, credDefId) => {
 
 const createCredDef = async(issuerWallet, issuerDid, credentialSchema, tag='TAG1', type='CL', config='{"support_revocation": false}') => {
     let [credDefId, credDef] = await indy.issuerCreateAndStoreCredentialDef(issuerWallet, issuerDid, credentialSchema, tag, type, config)
+    console.log('cred def created');
+    
     return {credDefId, credDef}
 }
 
