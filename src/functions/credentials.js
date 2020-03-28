@@ -19,9 +19,9 @@ const getSchema = async(poolHandle, issuerDid, credentialSchemaId) => {
 
 
 
-const createSchema = async (issuerDid, nameOfSchema, version='1.2', attrNames) => {
+const createSchema = async (issuerDid, nameOfSchema, version='1.2', ...attrNames) => {
     console.log('In create schema func --------------->');
-    console.log(issuerDid, nameOfSchema, version='1.0', attrNames)
+    console.log(issuerDid, nameOfSchema, version, attrNames)
     let [schemaId, schema] = await indy.issuerCreateSchema(issuerDid, nameOfSchema, version, attrNames)
     console.log('SCHEMA CREATED-------->', schema)
     return {schemaId, schema}

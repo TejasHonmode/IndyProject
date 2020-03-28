@@ -21,7 +21,7 @@ router.post('/createSchema', auth, async(req, res) => {
         console.log('IN SCHEMA TRY');
         let attrNames = req.body.attrNames.split(' ')
         console.log('ATTRIBUTES------->', attrNames)
-        let schemaInfo = await credentialsFunc.createSchema(me.did, req.body.name, attrNames)
+        let schemaInfo = await credentialsFunc.createSchema(me.did, req.body.name, ...attrNames)
         console.log('SCHEMA INFO---------------------->', schemaInfo)
         let Schema = new CredentialSchema({
             ver: schemaInfo.schema.ver,
@@ -45,7 +45,7 @@ router.post('/createSchema', auth, async(req, res) => {
     }
 })
 
-router.get('/getSchema', async(req, res) => {
+router.get('/getSchema', auth,async(req, res) => {
 
     let me = await DidKeyPair.findOne({owner: req.user._id, public: true})
     if(req.body.name){
