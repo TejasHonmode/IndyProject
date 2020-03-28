@@ -13,27 +13,32 @@ router.post('/createSchema', auth, async(req, res) => {
 
 
     let me = await DidKeyPair.findOne({owner: req.user._id, public: true})
-
+    
+    console.log('SCHEMA ME DID------->', me.did);
+    
     
     try {
-
-        let schemaInfo = await credentialsFunc.createSchema(me.did, req.body.name, req.body.creds.split())
-
-        let schema = new CredentialSchema({
-            // ver: schemaInfo.schema.ver,
-            // id: schemaInfo.schemaId,
-            // name: schemaInfo.schema.name,
-            // version: schemaInfo.schema.version,
+        console.log('IN SCHEMA TRY');
+        let attrNames = req.body.attrNames.split(' ')
+        console.log('ATTRIBUTES------->', attrNames)
+        let schemaInfo = await credentialsFunc.createSchema(me.did, req.body.name, attrNames)
+        console.log('SCHEMA INFO---------------------->', schemaInfo)
+        let Schema = new CredentialSchema({
+            ver: schemaInfo.schema.ver,
+            id: schemaInfo.schemaId,
+            name: schemaInfo.schema.name,
+            version: schemaInfo.schema.version,
             // attrNames: schemaInfo.schema.attrNames,
-            // seqNo: schemaInfo.schema.seqNo,
-            ...schemaInfo.schema,
+            attrNames: req.body.attrNames,
+            seqNo: schemaInfo.schema.seqNo,
+            // ...schemaInfo.schema,
             did: me.did,
             owner: req.user._id
         })
 
         let sentSchemaInfo = await credentialsFunc.sendSchema(pool.poolHandle, req.user.userWalletHandle, me.did, schemaInfo.schema)
 
-        await schema.save()
+        await Schema.save()
         res.send({schemaInfo, sentSchemaInfo})
     } catch (e) {
         res.send(e)        
@@ -105,6 +110,12 @@ router.post('/getCredDef', auth,async(req, res) => {
     } catch (e) {
         res.send(e)
     }
+})
+
+
+router.post('/sample', (req, res) => {
+
+    res.send(req.body.creds.split(' '))
 })
 
 module.exports = router

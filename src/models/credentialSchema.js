@@ -21,7 +21,7 @@ const credentialSchema = new mongoose.Schema({
         required: true
     },
     attrNames: {
-        type: [String],
+        type: String,
         required: true
     },
     seqNo: {

@@ -373,12 +373,15 @@ router.post('/assignRole', auth, async(req, res) => {
     // await DidInfo.updateOne({recipientDid: me.did, did: req.body.recipientDid, acknowledged: false}, {acknowledged: true})
 
     try {
-        let user = await User.updateOne({did: didInfo.did, verkey: didInfo.verkey}, {role: didInfo.role})
-
+        let user = await User.updateOne({_id: didInfo.owner, role: 'USER'}, {role: didInfo.role})
+        console.log('USER UPDATED----------->', user);
+        
         let nymInfo = await pool.sendNym(pool.poolHandle, req.user.userWalletHandle, me.did, didInfo.did, didInfo.key, didInfo.role)
-
+        console.log('ROLE ASSIGNED-------------------->');
+        
         await DidInfo.updateOne({recipientDid: me.did, did: req.body.recipientDid, acknowledged: false}, {acknowledged: true})
-
+        console.log('DID INFO ACKNOWLEDGED ---------------------------->');
+        
         res.send({
             did: didInfo.did,
             ROLE_ASSIGNED: nymInfo.role

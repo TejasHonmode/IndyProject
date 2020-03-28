@@ -5,6 +5,8 @@ const pool = require('./pool')
 const sendSchema = async (poolHandle, issuerWallet, issuerDid, credentialSchema) => {
     let schemaRequest = await indy.buildSchemaRequest(issuerDid, credentialSchema)
     await indy.signAndSubmitRequest(poolHandle, issuerWallet, issuerDid, schemaRequest)
+    console.log('SCHEMA SENT ---------------->');
+    
     return {schema:credentialSchema.name, msg:'Schema sent'}
 }
 
@@ -17,9 +19,11 @@ const getSchema = async(poolHandle, issuerDid, credentialSchemaId) => {
 
 
 
-const createSchema = async (issuerDid, nameOfSchema, version='1.2', credList) => {
-    let [schemaId, schema] = await indy.issuerCreateSchema(issuerDid, nameOfSchema, version, credList)
-
+const createSchema = async (issuerDid, nameOfSchema, version='1.2', attrNames) => {
+    console.log('In create schema func --------------->');
+    console.log(issuerDid, nameOfSchema, version='1.0', attrNames)
+    let [schemaId, schema] = await indy.issuerCreateSchema(issuerDid, nameOfSchema, version, attrNames)
+    console.log('SCHEMA CREATED-------->', schema)
     return {schemaId, schema}
 }
 
