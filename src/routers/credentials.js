@@ -62,7 +62,7 @@ router.post('/getSchema', auth,async(req, res) => {
     
     try {
         console.log('schema id ----------->', getSchemaInfo.id)
-        let schema = await credentialsFunc.getSchema(me.did, getSchemaInfo.id, req.user.userWalletHandle)
+        let schema = await credentialsFunc.getSchema(me.did, getSchemaInfo.id, pool.poolHandle)
         console.log('SCHEMA INFO -------------------->',schema)
         res.send({schema})
     } catch (e) {

@@ -11,21 +11,21 @@ const sendSchema = async (poolHandle, issuerWallet, issuerDid, credentialSchema)
 }
 
 
-const getSchema = async(issuerDid, credentialSchemaId) => {
+const getSchema = async(issuerDid, credentialSchemaId, poolHandle) => {
     
     let getSchemaRequest = await indy.buildGetSchemaRequest(issuerDid, credentialSchemaId)
     console.log(' get Schema reqt', getSchemaRequest);
     
-    let getSchemaResponse = await indy.submitRequest(pool.poolHandle, getSchemaRequest);
+    let getSchemaResponse = await indy.submitRequest(poolHandle, getSchemaRequest);
     console.log('get schema response', getSchemaResponse);
 
     console.log('ARGS IN GET SCHEMA---------- >');
-    console.log(issuerDid, credentialSchemaId, pool.poolHandle);
+    console.log(issuerDid, credentialSchemaId, poolHandle);
 
-    let [, schema] = await indy.parseGetSchemaResponse(getSchemaResponse);
+    let [schemaId, schema] = await indy.parseGetSchemaResponse(getSchemaResponse);
     console.log('GOT SCHEMA---------->',schema);
     
-    return schema
+    return {schemaId, schema}
 }
 
 
