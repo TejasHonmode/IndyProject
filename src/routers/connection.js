@@ -365,10 +365,10 @@ router.post('/sendDidInfo', auth,async(req, res) => {
 router.post('/assignRole', auth, async(req, res) => {
 
     let me = await DidKeyPair.findOne({owner: req.user._id, public: true})
-
+    console.log('ME DID------------------>', me.did)
     let didInfo = await DidInfo.findOne({recipientDid: me.did, did: req.body.recipientDid, acknowledged: false})
 
-    
+    console.log('DID INFO-------------->', didInfo)
 
     // await DidInfo.updateOne({recipientDid: me.did, did: req.body.recipientDid, acknowledged: false}, {acknowledged: true})
 
@@ -376,7 +376,7 @@ router.post('/assignRole', auth, async(req, res) => {
         let user = await User.updateOne({_id: didInfo.owner, role: 'USER'}, {role: didInfo.role})
         console.log('USER UPDATED----------->', user);
         
-        let nymInfo = await pool.sendNym(pool.poolHandle, req.user.userWalletHandle, me.did, didInfo.did, didInfo.key, didInfo.role)
+        let nymInfo = await pool.sendNym(pool.poolHandle, req.user.userWalletHandle, me.did, didInfo.did, didInfo.verkey, didInfo.role)
         console.log('ROLE ASSIGNED-------------------->');
         
         await DidInfo.updateOne({recipientDid: me.did, did: req.body.recipientDid, acknowledged: false}, {acknowledged: true})

@@ -23,9 +23,11 @@ const poolCreation = async (poolName) => {
 }
 
 const sendNym = async (poolHandle, walletHandle, Did, newDid, newKey, role=null) => {
-
+    console.log('NYM ARGS ------------------->',poolHandle, walletHandle, Did, newDid, newKey, role)
     let nymRequest = await indy.buildNymRequest(Did, newDid, newKey, null, role);
-    await indy.signAndSubmitRequest(poolHandle, walletHandle, Did, nymRequest);
+    console.log('Nym Request--------------------------->', nymRequest)
+    let response = await indy.signAndSubmitRequest(poolHandle, walletHandle, Did, nymRequest);
+    console.log('Nym response----------------------------->', response)
     return {role, msg: 'nym request sent'}
 }
 // const createUserWallet = async (name,id, key, refid) => {

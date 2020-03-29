@@ -3,9 +3,15 @@ const pool = require('./pool')
 
 
 const sendSchema = async (poolHandle, issuerWallet, issuerDid, credentialSchema) => {
+    console.log(poolHandle, issuerWallet, issuerDid, credentialSchema);
+    
     let schemaRequest = await indy.buildSchemaRequest(issuerDid, credentialSchema)
-    await indy.signAndSubmitRequest(poolHandle, issuerWallet, issuerDid, schemaRequest)
-    console.log('SCHEMA SENT ---------------->');
+    console.log('req---------', schemaRequest);
+    console.log('-----------')
+    console.log(schemaRequest.operation.data.attr_names);
+    
+    let response = await indy.signAndSubmitRequest(poolHandle, issuerWallet, issuerDid, schemaRequest)
+    console.log('SCHEMA SENT ---------------->', response);
     
     return {schema:credentialSchema.name, msg:'Schema sent'}
 }
