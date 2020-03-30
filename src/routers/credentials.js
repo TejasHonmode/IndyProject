@@ -121,10 +121,8 @@ router.post('/getCredDef', auth,async(req, res) => {
             
             let credDef = await credentialsFunc.getCredDef(pool.poolHandle, me.did, credDefInfo.id)
             console.log('CRED DEF ---------------------------->', credDef);
-            
+            return res.send(credDef)   
         }
-
-        res.send(credDef)
     } catch (e) {
         res.send(e)
     }
