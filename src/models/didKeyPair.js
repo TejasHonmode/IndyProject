@@ -6,6 +6,10 @@ const didKeyPairSchema = mongoose.Schema({
         type: String,
         required: true
     },
+    by: {
+        type: String,
+        require: true
+    },
     did: {
         type: String,
 

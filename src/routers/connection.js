@@ -12,7 +12,7 @@ const ConnectionRequest = require('../models/connectionRequest')
 const ConnectionResponse = require('../models/connectionResponse')
 const pool = require('../functions/pool')
 const DidInfo = require('../models/didInfo')
-
+const indy = require('indy-sdk')
 router.post('/sendConnectionOffer', auth,async(req, res) => {
 
 
@@ -153,6 +153,7 @@ router.post('/sendConnectionRequest', auth,async(req, res) => {
 
         const didKeyPair = new DidKeyPair({
             id: req.user.id,
+            by: requestorDid,
             did: Request.newDid,
             verkey: Request.newKey,
             metadata: req.body.metadata,
@@ -237,10 +238,15 @@ router.post('/sendConnectionResponse', auth, async(req, res) => {
 
 
     let request = await ConnectionRequest.updateOne({did: recipientDid, recipientDid: myDid, responded: false}, {responded: true})
+    let requestInfo = await ConnectionRequest.findOne({did: recipientDid, recipientDid: myDid, responded: true})
+    let user = await User.findOne({_id: requestInfo.owner})
+    let metadata2 = user.name
+    console.log(metadata2);
+    
 
     try {
 
-        const Response = await userFuncs.connectionResponse(myDid, recipientDid, req.user.userWalletHandle, request.newDid, req.body.metadata)
+        const Response = await userFuncs.connectionResponse(myDid, recipientDid, req.user.userWalletHandle, requestInfo.newDid, req.body.metadata, metadata2)
 
         const connectionResponse = new ConnectionResponse({
             did:Response.did,
@@ -255,6 +261,7 @@ router.post('/sendConnectionResponse', auth, async(req, res) => {
 
         let didKeyPair = new DidKeyPair({
             id: req.user.id,
+            by: myDid,
             did: Response.newDid,
             verkey: Response.newKey,
             metadata: req.body.metadata,
@@ -322,11 +329,16 @@ router.post('/sendAcknowledgement', auth, async(req, res) => {
 
     let Response = await ConnectionResponse.findOne({did: recipientDid, recipientDid: myDid, acknowledged: true})
 
-
+    let user = await User.findOne({_id: Response.owner})
+    let metadata = user.name
+    console.log(metadata);
+    
     // let ack = await userFuncs.connectionAcknowledgement(me.did)
     // console.log(ack)
     try {
-
+        // await indy.createPairwise(req.user.userWalletHandle, Response.newDid, myDid, metadata)
+        // console.log('PAIRWISE CREATED');
+        
         let nymInfo = await pool.sendNym(pool.poolHandle, req.user.userWalletHandle, myDid, Response.newDid, Response.newKey)
         res.send({response, Response, nymInfo, msg: 'Connected yay!!!!  UwU'})
     } catch (e) {

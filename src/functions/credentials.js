@@ -1,5 +1,6 @@
 const indy = require('indy-sdk')
 const pool = require('./pool')
+const encryption = require('../functions/encryption')
 
 
 const sendSchema = async (poolHandle, issuerWallet, issuerDid, credentialSchema) => {
@@ -104,5 +105,31 @@ const createCredDef = async(issuerWallet, issuerDid, credentialSchema, tag='TAG1
     return {credDefId, credDef}
 }
 
-module.exports = {sendSchema, getSchema, createSchema, sendCredDef, getCredDef, createCredDef}
+
+const createCredentialOffer = async(userWalletHandle, credDefId, senderVk, recipientVk) => {
+    console.log('CREATE CREDENTIAL OFFER ARGS -------------------------------->', userWalletHandle, credDefId, senderVk, recipientVk);
+    
+    let offer = await indy.issuerCreateCredentialOffer(userWalletHandle, credDefId)
+    console.log('OFFER________________>',offer)
+
+    let authCryptOffer = await encryption.authCrypt(userWalletHandle,senderVk, recipientVk, offer)
+    console.log('AUTH CRYPT OFFER------------------------>', authCryptOffer);
+    
+    return authCryptOffer
+} 
+
+const createMasterSecret = async(userWalletHandle) => {
+
+    let masterSecretId = await indy.proverCreateMasterSecret(userWalletHandle, null)
+    return masterSecretId
+}
+
+
+const createCredentialRequest = async(userWalletHandle, proverPairwiseDid, authDecryptOfferJSON, credDef, masterSecretId) => {
+
+    let [requestJSON, requestMetadataJSON] = await indy.proverCreateCredentialReq(userWalletHandle, proverPairwiseDid, authDecryptOfferJSON, credDef, masterSecretId)
+    return {requestJSON, requestMetadataJSON}
+}
+
+module.exports = {sendSchema, getSchema, createSchema, sendCredDef, getCredDef, createCredDef, createCredentialOffer, createMasterSecret, createCredentialRequest}
 

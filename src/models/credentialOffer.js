@@ -5,27 +5,32 @@ const jwt = require('jsonwebtoken')
 
 
 const credentialOfferSchema = new mongoose.Schema({
-    ver: {
+    did: {
         type: String,
         required: true
     },
-    id:{
-        type: String,
+    message:{
+        type: Buffer,
         required: true
     },
-    schemaId: {
+    recipientDid: {
         type: String,
         required: true
     },
     owner: {
         type: mongoose.Schema.Types.ObjectId,
         required: true,
-        ref: 'CredentialSchema'
+        ref: 'User'
+    },
+    acknowledged: {
+        type: Boolean,
+        default: false,
+        required: true
     }
 }, {
     timestamps: true
 })
 
-const CredentialDefinition = mongoose.model('CredentialDefinition', credentialDefinitionSchema)
+const CredentialOffer = mongoose.model('CredentialOffer', credentialOfferSchema)
 
-module.exports = CredentialDefinition
+module.exports = CredentialOffer

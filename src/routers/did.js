@@ -30,6 +30,7 @@ router.post('/createDidVerkey', auth,async(req, res) => {
 
         const didKeyPair = new DidKeyPair({
             id: req.user.id,
+            by: didKeyMetadata.did,
             did:didKeyMetadata.did,
             verkey:didKeyMetadata.verkey,
             metadata:didKeyMetadata.metadata,

@@ -167,13 +167,13 @@ const connectionRequest = async (did, recipientDid, userWalletHandle, metadata,r
 // }
 
 
-const connectionResponse = async (did, recipientDid, userWalletHandle, theirDid, metadata) => {
-
+const connectionResponse = async (did, recipientDid, userWalletHandle, theirDid, metadata, metadata2) => {
+    console.log(did, recipientDid, userWalletHandle, theirDid, metadata, metadata2)
     let [newDid, newKey] = await indy.createAndStoreMyDid(userWalletHandle, {})
     console.log('Resp DId-Key created')
     await indy.setDidMetadata(userWalletHandle, newDid, metadata)
     console.log('Resp new Did meta data set')
-    // await indy.createPairwise(userWalletHandle, theirDid, did, metadata)
+    // await indy.createPairwise(userWalletHandle, theirDid, did, metadata2)
     // console.log('Pairwise created in wallet')
     return {
         did,
@@ -212,10 +212,15 @@ const connectionAcknowledgement = async(did) => {
 // }
 
 
-const keyForDid = async(userWalletHandle, did) => {
-    verkey = await indy.keyForDid(pool.poolHandle, userWalletHandle, did)
+
+
+const keyForDid = async(poolHandle,userWalletHandle, did) => {
+    verkey = await indy.keyForDid(poolHandle, userWalletHandle, did)
     return verkey
 }
+
+
+
 
 
 module.exports = {createUserWallet, createOrgWallet, openWallet, closeWallet, deleteWallet, createDidKey, connectionOffer, connectionRequest, connectionResponse, connectionAcknowledgement, keyForDid}
