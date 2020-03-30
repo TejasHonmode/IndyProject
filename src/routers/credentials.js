@@ -73,25 +73,28 @@ router.post('/getSchema', auth,async(req, res) => {
 router.post('/createCredDef', auth, async(req, res) => {
 
     let me = await DidKeyPair.findOne({owner: req.user._id, public: true})
-
+    console.log('ME DID----------->', me.did)
     let schemaInfo = await CredentialSchema.findOne({name: req.body.name})
     // if(req.body.name){
     //     let schemaInfo = await CredentialSchema.findOne({name})
     // }
     // if()
-    let [,schema] = await credentialsFunc.getSchema( me.did, schemaInfo.id)
-    let credDefInfo = await credentialsFunc.createCredDef(req.user.userWalletHandle, me.did, schema)
+    let schema = await credentialsFunc.getSchema( me.did, schemaInfo.id, pool.poolHandle)
+    console.log('SCHEMA----------------->', schema);
+    
+    let credDefInfo = await credentialsFunc.createCredDef(req.user.userWalletHandle, me.did, schema.schema)
     console.log('CRED DEF CREATED------------------->', credDefInfo);
     
     let  sentCredDefInfo = await credentialsFunc.sendCredDef(pool.poolHandle, req.user.userWalletHandle, me.did, credDefInfo.credDef)
-    console.log('CREDDEF SENT--------------->');
+    console.log('CREDDEF SENT--------------->', sentCredDefInfo);
     
     try {
         let credDef = new CredentialDefinition({
             ver: credDefInfo.credDef.ver,
             id: credDefInfo.credDefId,
+            schemaName: req.body.name,
             schemaId: schemaInfo.id,
-            owner: schemaInfo._id
+            owner: req.user._id
         })
         await credDef.save()
         res.send({credDefInfo, sentCredDefInfo})
@@ -104,18 +107,24 @@ router.post('/createCredDef', auth, async(req, res) => {
 router.post('/getCredDef', auth,async(req, res) => {
 
     let me = await DidKeyPair.findOne({owner: req.user._id, public: true})
-
+    console.log('ME DID----------->', me.did);
+    
     try {
 
         if(req.body.credDefId){
-            let [,credDef] = await credentialsFunc.getCredDef(pool.poolHandle, me.did, credDef)
+            let credDef = await credentialsFunc.getCredDef(pool.poolHandle, me.did, credDefId)
+            console.log('CRED DEF---------------------------->', credDef);
+            
         }else{
-            let credDefInfo = await CredentialDefinition.findOne({schemaId: req.body.schemaId})
-    
-            let [,credDef] = await credentialsFunc.getCredDef(pool.poolHandle, me.did, credDefInfo.id)
+            let credDefInfo = await CredentialDefinition.findOne({schemaName: req.body.name})
+            console.log('CRED DEF INFO------------------------->', credDefInfo);
+            
+            let credDef = await credentialsFunc.getCredDef(pool.poolHandle, me.did, credDefInfo.id)
+            console.log('CRED DEF ---------------------------->', credDef);
+            
         }
 
-        res.send({credDef})
+        res.send(credDef)
     } catch (e) {
         res.send(e)
     }

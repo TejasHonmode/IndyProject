@@ -4,16 +4,12 @@ const bcryptjs = require('bcryptjs')
 const jwt = require('jsonwebtoken')
 
 
-const credentialDefinitionSchema = new mongoose.Schema({
+const credentialOfferSchema = new mongoose.Schema({
     ver: {
         type: String,
         required: true
     },
     id:{
-        type: String,
-        required: true
-    },
-    schemaName: {
         type: String,
         required: true
     },
