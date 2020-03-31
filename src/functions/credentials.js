@@ -131,5 +131,20 @@ const createCredentialRequest = async(userWalletHandle, proverPairwiseDid, authD
     return {requestJSON, requestMetadataJSON}
 }
 
-module.exports = {sendSchema, getSchema, createSchema, sendCredDef, getCredDef, createCredDef, createCredentialOffer, createMasterSecret, createCredentialRequest}
+
+const createCredential = async(userWalletHandle, credOffer, credReq, credValues) => {
+
+    let [credJSON] = await indy.issuerCreateCredential(userWalletHandle, credOffer, credReq, credValues, null, -1)
+
+    return [credJSON]
+}
+
+const storeCredential = async(userWalletHandle, credReqMetadataJSON, decryptCredJson, credDef) => {
+
+    let outSchemaId = await indy.proverStoreCredential(userWalletHandle, null, credReqMetadataJSON, decryptCredJson, credDef, null)
+
+    return outSchemaId
+}
+
+module.exports = {sendSchema, getSchema, createSchema, sendCredDef, getCredDef, createCredDef, createCredentialOffer, createMasterSecret, createCredentialRequest, createCredential, storeCredential}
 

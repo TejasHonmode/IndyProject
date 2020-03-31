@@ -13,6 +13,12 @@ const indy = require('indy-sdk')
 const userFuncs = require('../functions/user')
 const CredentialOffer = require('../models/credentialOffer')
 const encryption = require('../functions/encryption')
+const CredentialRequest = require('../models/credentialRequest')
+const utf8 = require('utf8')
+const CredentialOfferJson = require('../models/credentialOfferJson')
+const Credential = require('../models/credSchema')
+const CredentialReqMetadataJson = require('../models/credentialRequestMetadataJson')
+
 
 router.post('/createSchema', auth, async(req, res) => {
 
@@ -137,7 +143,8 @@ router.post('/getCredDef', auth,async(req, res) => {
 router.post('/createCredentialOffer', auth, async(req, res) => {
 
     let me = await DidKeyPair.findOne({owner: req.user._id, public: true})
-
+    console.log('ME DID------------------->', me.did);
+    
     let mePairwise = await DidKeyPair.findOne({owner: req.user._id, public: false, by:me.did, forDid: req.body.recipientDid})
     console.log(mePairwise)
 
@@ -146,9 +153,11 @@ router.post('/createCredentialOffer', auth, async(req, res) => {
 
     try {
         let credDefInfo = await CredentialDefinition.findOne({schemaName: req.body.name})
-
+        console.log('CRED DEF INFO----------------------------------------->', credDefInfo);
+        
         let authCryptOffer = await credentialsFunc.createCredentialOffer(req.user.userWalletHandle, credDefInfo.id, mePairwise.verkey, forMePairwise.verkey)
-
+        console.log('AUTHCRYPT OFFER---------------------------------------------->', authCryptOffer);
+        
         let credOffer = new CredentialOffer({
             did: me.did,
             message: authCryptOffer,
@@ -157,6 +166,8 @@ router.post('/createCredentialOffer', auth, async(req, res) => {
         })
 
         await credOffer.save()
+
+        res.send({authCryptOffer})
     } catch (e) {
         res.send(e)
     }
@@ -182,7 +193,8 @@ router.get('/pendingCredentialOffer', auth,async(req, res) => {
 router.post('/createCredentialRequest', auth, async(req, res) => {
 
     let me = await DidKeyPair.findOne({owner: req.user._id, public: true})
-
+    console.log('ME DID------------------------------>', me.did);
+    
     let mePairwise = await DidKeyPair.findOne({owner: req.user._id, public: false, by:me.did, forDid: req.body.recipientDid})
     console.log(mePairwise)
 
@@ -190,27 +202,161 @@ router.post('/createCredentialRequest', auth, async(req, res) => {
     console.log(forMePairwise);
 
     let offerUpdate = await CredentialOffer.updateOne({did: req.body.recipientDid, recipientDid: me.did, acknowledged: false}, {acknowledged: true})
-    console.log(offerUpdate)
+    console.log('OFFER UPDATED-------------------------------------------->', offerUpdate)
 
     let offer = await CredentialOffer.findOne({did: req.body.recipientDid, recipientDid: me.did, acknowledged: true})
-    console.log(offer);
+    console.log('OFFER--------------------------------------->', offer);
 
     try {
         let verkey = await userFuncs.keyForDid(pool.poolHandle, req.user.userWalletHandle, mePairwise.did)
-
-        let[senderVerkey, offerJSON, decryptedOffer] = await encryption.authDecrypt(req.user.userWalletHandle, verkey, offer.message)
-
+        console.log('VERKEY -------------------------------------------------->', verkey);
+        
+        let [senderVerkey, offerJSON, decryptedOffer] = await encryption.authDecrypt(req.user.userWalletHandle, verkey, offer.message)
+        console.log('AFTER DECRYPTION-------------------------------------------------->');
+        console.log(senderVerkey, offerJSON, decryptedOffer);
+        
+        
         let masterSecretId = await credentialsFunc.createMasterSecret(req.user.userWalletHandle)
-
+        console.log('MASTER SECRET------------------------------------>', masterSecretId);
+        
         let credDefInfo = await credentialsFunc.getCredDef(pool.poolHandle, mePairwise.did, decryptedOffer.cred_def_id)
-
+        console.log('CREDDEFINFO------------------------------------------>', credDefInfo);
+        
         let credentialRequestInfo = await credentialsFunc.createCredentialRequest(req.user.userWalletHandle, mePairwise.did, offerJSON, credDefInfo.credDef, masterSecretId)
+        console.log('CRED REQ INFO--------------------------------------------->', credentialRequestInfo);
 
-        res.send({offerJSON, decryptedOffer, credDefInfo, credentialRequestInfo})
+        let authCryptReq = await encryption.authCrypt(req.user.userWalletHandle, mePairwise.verkey, forMePairwise.verkey, credentialRequestInfo.requestJSON)
+        console.log('AUTHCRYPT REQ---------------------------------------------->', authCryptReq);
+        
+
+        let credentialRequest = new CredentialRequest({
+            did: me.did,
+            message: authCryptReq,
+            recipientDid: req.body.recipientDid,
+            owner: req.user._id
+        })
+
+        await credentialRequest.save()
+
+        let offerjson = new CredentialOfferJson({
+            did: req.body.recipientDid,
+            message: offerJSON,
+            recipientDid: me.did,
+            owner: offer.owner
+        })
+
+        await offerjson.save()
+
+        let credReqMetadataJSON = new CredentialReqMetadataJson({
+            did: me.did,
+            message: JSON.stringify(credentialRequestInfo.requestMetadataJSON),
+            recipientDid: req.body.recipientDid,
+            owner: req.user._id
+        })
+
+        await credReqMetadataJSON.save()
+
+        res.send({offerJSON, decryptedOffer, credDefInfo, credentialRequestInfo, credentialRequest, offerjson, credReqMetadataJSON})
     } catch (e) {
         res.send(e)
     }
     
+
+})
+
+
+router.post('/createCredential', auth, async(req, res) => {
+
+    let me = await DidKeyPair.findOne({owner: req.user._id, public: true})
+    console.log('ME DID------------------------------------------->', me.did);
+    
+    let mePairwise = await DidKeyPair.findOne({owner: req.user._id, public: false, by:me.did, forDid: req.body.recipientDid})
+    console.log(mePairwise)
+
+    let forMePairwise = await DidKeyPair.findOne({forDid: me.did, public: false, by: req.body.recipientDid})
+    console.log(forMePairwise);
+
+    let offerjson = await CredentialOfferJson.findOne({did: me.did, recipientDid: req.body.recipientDid, owner: req.user._id})
+    console.log('OFFER JSON--------------------------------------------------------------------->', offerjson);
+    
+    // let offerJSON = await utf8.decode(offerjson.message)
+
+    let credValues = req.body.credValues
+    console.log(credValues);
+    
+    try {
+
+        let reqUpdate = await CredentialRequest.updateOne({did: req.body.recipientDid, recipientDid: me.did, acknowledged: false}, {acknowledged: true})
+        console.log('REQUPDATE---------------------------------------------->', reqUpdate);
+        
+        let request = await CredentialRequest.findOne({did: req.body.recipientDid, recipientDid: me.did, acknowledged: true})
+        console.log('REQUEST----------------------------------------------------->', request);
+        
+        let [senderVerkey, decryptRequestJSON] = await encryption.authDecrypt(req.user.userWalletHandle, mePairwise.verkey, request.message)
+        console.log('SENDER VERKEY------------------------------------------------------>', senderVerkey);
+        console.log('DECRYPT REQUEST JSON--------------------------------------------->', decryptRequestJSON);
+        
+        
+        let [credJSON] = await credentialsFunc.createCredential(req.user.userWalletHandle, offerjson, decryptRequestJSON, credValues)
+        console.log('CREDJSON------------------------------------------------------------------>', credJSON);
+        
+
+        let authCryptCredJSON = await encryption.authCrypt(req.user.userWalletHandle, mePairwise.verkey, forMePairwise.verkey, credJSON)
+        console.log('AUTHCRYPTCRED JSON-------------------------------------------------------->', authCryptCredJSON);
+        
+        let credential = new Credential({
+            did: me.did,
+            message: authCryptCredJSON,
+            recipientDid: req.body.recipientDid,
+            owner: req.user._id
+        })
+
+        await credential.save()
+
+        res.send({offerJSON, credValues, request, decryptRequestJSON, credJSON, authCryptCredJSON, credential})
+
+    } catch (e) {
+        res.send(e)
+    }
+    
+})
+
+
+router.get('/storeCredential', auth, async(req, res) => {
+
+    let me = await DidKeyPair.findOne({owner: req.user._id, public: true})
+
+    let mePairwise = await DidKeyPair.findOne({owner: req.user._id, public: false, by:me.did, forDid: req.body.recipientDid})
+    console.log(mePairwise)
+
+    let forMePairwise = await DidKeyPair.findOne({forDid: me.did, public: false, by: req.body.recipientDid})
+    console.log(forMePairwise);
+
+
+    try {
+        let authCryptCredJsonUpdate = await Credential.updateOne({did: req.body.recipientDid, recipientDid: me.did, acknowledged: false}, {acknowledged: true})
+
+    let authCryptCredJson = await Credential.findOne({did: req.body.recipientDid, recipientDid: me.did, acknowledged: true})
+    
+    let [, authdecryptCredJson] = await authDecrypt(req.user.userWalletHandle, mePairwise.verkey, authCryptCredJson)
+
+    let credReqMetadataJSONUTF = await credReqMetadataJSON.findOne({owner: req.user._id, did: me.did, recipientDid: req.body.recipientDid})
+
+    let credReqMetadataJSON = await utf8.decode(credReqMetadataJSONUTF)
+
+    let credDef = await CredentialDefinition.findOne({schemaName: req.body.name})
+
+    let credDefInfo = await credentialsFunc.getCredDef(pool.poolHandle, mePairwise.did, credDef.id)
+
+    let outSchemaId = await credentialsFunc.storeCredential(req.user.userWalletHandle, credReqMetadataJSON, authdecryptCredJson, credDefInfo.credDef)
+
+    res.send({authCryptCredJsonUpdate, authCryptCredJson, authdecryptCredJson, credReqMetadataJSONUTF, credReqMetadataJSON, outSchemaId})
+
+    } catch (e) {
+        res.send(e)
+    }
+    
+
 
 })
 
@@ -223,25 +369,34 @@ router.post('/sample',async (req, res) => {
 
     // let dcr = JSON.parse(Buffer.from(await indy.cryptoAnonDecrypt(req.body.userWalletHandle, req.body.verkey, cr)));
 
-    let cr = await indy.cryptoAuthCrypt(req.body.cruserWalletHandle, req.body.senderVk, req.body.recipientVk, Buffer.from(JSON.stringify({msg: "hello"}), 'utf-8'))
+    // let cr = await indy.cryptoAuthCrypt(req.body.cruserWalletHandle, req.body.senderVk, req.body.recipientVk, Buffer.from(JSON.stringify({msg: "hello"}), 'utf-8'))
 
-    let sample = new Sample({
-        data: cr,
-        did: req.body.did
-    })
-    await sample.save()
-    console.log(cr);
+    // let sample = new Sample({
+    //     data: cr,
+    //     did: req.body.did
+    // })
+    // await sample.save()
+    // console.log(cr);
 
-    let crr = await Sample.findOne({did: req.body.did})
-    console.log(crr)
-    console.log('CRR>DATA ------------------------------------------------------------->', crr.data)
-    let [fromVerkey, decryptedMsgJSON, decryptedMsg] = await userFuncs.authDecrypt(req.body.dcruserWalletHandle, req.body.recipientVk, crr.data)
+    // let crr = await Sample.findOne({did: req.body.did})
+    // console.log(crr)
+    // console.log('CRR>DATA ------------------------------------------------------------->', crr.data)
+    // let [fromVerkey, decryptedMsgJSON, decryptedMsg] = await userFuncs.authDecrypt(req.body.dcruserWalletHandle, req.body.recipientVk, crr.data)
 
-    console.log(fromVerkey, decryptedMsgJSON, decryptedMsg);
+    // console.log(fromVerkey, decryptedMsgJSON, decryptedMsg);
+    
+    let message = {msg: "hello"}
+    console.log(message);
+    
+    let s = JSON.stringify(message)
+    console.log(s);
+
+    let p = JSON.parse(s)
     
     
 
-    res.send({cr, fromVerkey, decryptedMsgJSON, decryptedMsg})
+    // res.send({cr, fromVerkey, decryptedMsgJSON, decryptedMsg, messageUTF, normal})
+    res.send({message, s, p})
 })
 
 module.exports = router

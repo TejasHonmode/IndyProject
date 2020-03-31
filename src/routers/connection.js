@@ -153,7 +153,7 @@ router.post('/sendConnectionRequest', auth,async(req, res) => {
 
         const didKeyPair = new DidKeyPair({
             id: req.user.id,
-            by: requestorDid,
+            by: myDid,
             did: Request.newDid,
             verkey: Request.newKey,
             metadata: req.body.metadata,
@@ -238,7 +238,10 @@ router.post('/sendConnectionResponse', auth, async(req, res) => {
 
 
     let request = await ConnectionRequest.updateOne({did: recipientDid, recipientDid: myDid, responded: false}, {responded: true})
+    console.log(request)
     let requestInfo = await ConnectionRequest.findOne({did: recipientDid, recipientDid: myDid, responded: true})
+    console.log('REQUESTINFO----------------------------------------------------------->', requestInfo);
+    
     let user = await User.findOne({_id: requestInfo.owner})
     let metadata2 = user.name
     console.log(metadata2);
