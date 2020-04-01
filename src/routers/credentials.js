@@ -313,7 +313,7 @@ router.post('/createCredential', auth, async(req, res) => {
 
         await credential.save()
 
-        res.send({offerJSON, credValues, request, decryptRequestJSON, credJSON, authCryptCredJSON, credential})
+        res.send({offerjson, credValues, request, decryptRequestJSON, credJSON, authCryptCredJSON, credential})
 
     } catch (e) {
         res.send(e)
@@ -341,10 +341,10 @@ router.get('/storeCredential', auth, async(req, res) => {
     let authCryptCredJson = await Credential.findOne({did: req.body.recipientDid, recipientDid: me.did, acknowledged: true})
     console.log('AUTHCRYPT CRED JSON--------------------------------------------->', authCryptCredJson);
     
-    let [, authdecryptCredJson] = await authDecrypt(req.user.userWalletHandle, mePairwise.verkey, authCryptCredJson.message)
+    let [, authdecryptCredJson] = await encryption.authDecrypt(req.user.userWalletHandle, mePairwise.verkey, authCryptCredJson.message)
     console.log('AUTHDECRYPT CREDJSON------------------------------------------------------->', authdecryptCredJson);
         
-    let credReqMetadataJSONString = await credReqMetadataJSON.findOne({owner: req.user._id, did: me.did, recipientDid: req.body.recipientDid})
+    let credReqMetadataJSONString = await CredentialReqMetadataJson.findOne({owner: req.user._id, did: me.did, recipientDid: req.body.recipientDid})
     console.log('credReqMetadataJSONString----------------------------------------------------->', credReqMetadataJSONString);
     
     let credReqMetadataJSON = JSON.parse(credReqMetadataJSONString.message)
@@ -359,7 +359,7 @@ router.get('/storeCredential', auth, async(req, res) => {
     let outSchemaId = await credentialsFunc.storeCredential(req.user.userWalletHandle, credReqMetadataJSON, authdecryptCredJson, credDefInfo.credDef)
     console.log('OUTSCHEMA ID------------------------------------------------------------------------>', outSchemaId);
     
-    res.send({authCryptCredJsonUpdate, authCryptCredJson, authdecryptCredJson, credReqMetadataJSONUTF, credReqMetadataJSON, outSchemaId})
+    res.send({authCryptCredJsonUpdate, authCryptCredJson, authdecryptCredJson, credReqMetadataJSONString, credReqMetadataJSON, outSchemaId})
 
     } catch (e) {
         res.send(e)
@@ -412,14 +412,15 @@ router.post('/sample',async (req, res) => {
     // console.log(i);
     
     
-    let m = Buffer.from('hello', 'utf-8')
-    console.log(m);
+    // let m = Buffer.from('hello', 'utf-8')
+    // console.log(m);
     
-    let n = int
+    // let n = int
 
-    let s = n.toString()
+    // let s = n.toString()
+    let m = await indy.generateNonce()
     // res.send({cr, fromVerkey, decryptedMsgJSON, decryptedMsg, messageUTF, normal})
-    res.send({m, n, s})
+    res.send({m})
 })
 
 module.exports = router
