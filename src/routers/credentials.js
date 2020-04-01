@@ -297,7 +297,7 @@ router.post('/createCredential', auth, async(req, res) => {
         console.log('DECRYPT REQUEST JSON--------------------------------------------->', decryptRequestJSON);
         
         
-        let [credJSON] = await credentialsFunc.createCredential(req.user.userWalletHandle, offerjson, decryptRequestJSON, credValues)
+        let [credJSON] = await credentialsFunc.createCredential(req.user.userWalletHandle, offerjson.message, decryptRequestJSON, credValues)
         console.log('CREDJSON------------------------------------------------------------------>', credJSON);
         
 
@@ -325,7 +325,8 @@ router.post('/createCredential', auth, async(req, res) => {
 router.get('/storeCredential', auth, async(req, res) => {
 
     let me = await DidKeyPair.findOne({owner: req.user._id, public: true})
-
+    console.log('ME DID---------------------------------------------->', me.did);
+    
     let mePairwise = await DidKeyPair.findOne({owner: req.user._id, public: false, by:me.did, forDid: req.body.recipientDid})
     console.log(mePairwise)
 
@@ -334,22 +335,30 @@ router.get('/storeCredential', auth, async(req, res) => {
 
 
     try {
-        let authCryptCredJsonUpdate = await Credential.updateOne({did: req.body.recipientDid, recipientDid: me.did, acknowledged: false}, {acknowledged: true})
-
+    let authCryptCredJsonUpdate = await Credential.updateOne({did: req.body.recipientDid, recipientDid: me.did, acknowledged: false}, {acknowledged: true})
+        console.log('AUTHCRYPTCREDJSON UPDATE------------------------------------------------->', authCryptCredJsonUpdate);
+        
     let authCryptCredJson = await Credential.findOne({did: req.body.recipientDid, recipientDid: me.did, acknowledged: true})
+    console.log('AUTHCRYPT CRED JSON--------------------------------------------->', authCryptCredJson);
     
-    let [, authdecryptCredJson] = await authDecrypt(req.user.userWalletHandle, mePairwise.verkey, authCryptCredJson)
-
-    let credReqMetadataJSONUTF = await credReqMetadataJSON.findOne({owner: req.user._id, did: me.did, recipientDid: req.body.recipientDid})
-
-    let credReqMetadataJSON = await utf8.decode(credReqMetadataJSONUTF)
-
+    let [, authdecryptCredJson] = await authDecrypt(req.user.userWalletHandle, mePairwise.verkey, authCryptCredJson.message)
+    console.log('AUTHDECRYPT CREDJSON------------------------------------------------------->', authdecryptCredJson);
+        
+    let credReqMetadataJSONString = await credReqMetadataJSON.findOne({owner: req.user._id, did: me.did, recipientDid: req.body.recipientDid})
+    console.log('credReqMetadataJSONString----------------------------------------------------->', credReqMetadataJSONString);
+    
+    let credReqMetadataJSON = JSON.parse(credReqMetadataJSONString.message)
+    console.log('CRED REQ METADATA JSON--------------------------------------------------------------->', credReqMetadataJSON);
+        
     let credDef = await CredentialDefinition.findOne({schemaName: req.body.name})
+    console.log('CRED DEF----------------------------------------------------------->', credDef);
 
     let credDefInfo = await credentialsFunc.getCredDef(pool.poolHandle, mePairwise.did, credDef.id)
-
+    console.log('CRED DEF INFO---------------------------------------------------------------------------->', credDefInfo);
+        
     let outSchemaId = await credentialsFunc.storeCredential(req.user.userWalletHandle, credReqMetadataJSON, authdecryptCredJson, credDefInfo.credDef)
-
+    console.log('OUTSCHEMA ID------------------------------------------------------------------------>', outSchemaId);
+    
     res.send({authCryptCredJsonUpdate, authCryptCredJson, authdecryptCredJson, credReqMetadataJSONUTF, credReqMetadataJSON, outSchemaId})
 
     } catch (e) {
@@ -363,7 +372,7 @@ router.get('/storeCredential', auth, async(req, res) => {
 
 
 router.post('/sample',async (req, res) => {
-    console.log(encodeURIComponent(req.body.enc))
+    // console.log(encodeURIComponent(req.body.enc))
 
     // let cr = await indy.cryptoAuthCrypt(req.body.userWalletHandle, req.body.senderverkey, req.body.recipientverkey,Buffer.from(JSON.stringify({msg: "hello"}), 'utf8'))
 
@@ -385,18 +394,32 @@ router.post('/sample',async (req, res) => {
 
     // console.log(fromVerkey, decryptedMsgJSON, decryptedMsg);
     
-    let message = {msg: "hello"}
-    console.log(message);
+    // let message = {msg: "hello"}
+    // console.log(message);
     
-    let s = JSON.stringify(message)
-    console.log(s);
+    // let s = JSON.stringify(message)
+    // console.log(s);
 
-    let p = JSON.parse(s)
-    
-    
+    // let p = JSON.parse(s)
 
+    // let message = 'hello'
+    // console.log(message);
+
+    // let messageUTF = Buffer.from(message, 'utf-8')
+    // console.log(messageUTF);
+    
+    // let i = parseInt('Tejas', 6)
+    // console.log(i);
+    
+    
+    let m = Buffer.from('hello', 'utf-8')
+    console.log(m);
+    
+    let n = int
+
+    let s = n.toString()
     // res.send({cr, fromVerkey, decryptedMsgJSON, decryptedMsg, messageUTF, normal})
-    res.send({message, s, p})
+    res.send({m, n, s})
 })
 
 module.exports = router
