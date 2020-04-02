@@ -1,7 +1,7 @@
 const indy = require('indy-sdk')
 const timestamp = require('timestamp')
 
-const User = require('../models/user')
+const User = require('../models/user/user')
 
 const localIp = require('local-ip')
 const ip = require('ip')

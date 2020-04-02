@@ -1,10 +1,10 @@
 const express = require('express')
 const router = new express.Router()
 const auth = require('../middleware/auth')
-const User = require('../models/user')
+const User = require('../models/user/user')
 const pool = require('../functions/pool')
-const DidKeyPair = require('../models/didKeyPair')
-const Sample = require('../models/sample')
+const DidKeyPair = require('../models/user/didKeyPair')
+const Sample = require('../models/user/sample')
 const bson = require('bson')
 const indy = require('indy-sdk')
 const userFuncs = require('../functions/user')
@@ -13,7 +13,7 @@ const utf8 = require('utf8')
 const proofFunc = require('../functions/proof')
 const ProofRequest = require('../models/proof/proofRequest')
 
-router.post('/createProof', auth, async(req, res) => {
+router.post('/createProofReq', auth, async(req, res) => {
 
     let me = await DidKeyPair.findOne({owner: req.user._id, public: true})
     console.log('ME DID------------------------------>', me.did);
@@ -98,7 +98,6 @@ router.post('/createProof', auth, async(req, res) => {
             credsForAttrs.push(credentials[0]['cred_info'])
         }
 
-        let
 
         await indy.proverCloseCredentialsSearchForProofReq(searchForProofReq)
 

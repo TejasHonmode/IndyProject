@@ -2,7 +2,7 @@ const mongoose = require('mongoose')
 const validator = require('validator')
 const bcryptjs = require('bcryptjs')
 const jwt = require('jsonwebtoken')
-const DidKeyPair = require('./didKeyPair')
+const DidKeyPair = require('../user/didKeyPair')
 
 
 const connectionOfferSchema = new mongoose.Schema({
