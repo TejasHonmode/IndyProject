@@ -14,6 +14,7 @@ const userRouter = require('./routers/user')
 const didKeyPairRouter = require('./routers/did')
 const connectionRouter = require('./routers/connection')
 const credentialRouter = require('./routers/credentials')
+const proofRouter = require('./routers/proof')
 // const forecast = require('./utils/forecast')
 // const geocode = require('./utils/geocode')
 
@@ -36,6 +37,7 @@ app.use(userRouter)
 app.use(didKeyPairRouter)
 app.use(connectionRouter)
 app.use(credentialRouter)
+app.use(proofRouter)
 
 // app.use(express.bodyParser());
 

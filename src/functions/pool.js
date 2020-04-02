@@ -30,6 +30,58 @@ const sendNym = async (poolHandle, walletHandle, Did, newDid, newKey, role=null)
     console.log('Nym response----------------------------->', response)
     return {role, msg: 'nym request sent'}
 }
+
+
+
+async function proverGetEntitiesFromLedger(poolHandle, did, identifiers, actor) {
+    let schemas = {};
+    let credDefs = {};
+    let revStates = {};
+
+    for(let referent of Object.keys(identifiers)) {
+        let item = identifiers[referent];
+        console.log(`\"${actor}\" -> Get Schema from Ledger`);
+        let [receivedSchemaId, receivedSchema] = await getSchema(poolHandle, did, item['schema_id']);
+        schemas[receivedSchemaId] = receivedSchema;
+
+        console.log(`\"${actor}\" -> Get Claim Definition from Ledger`);
+        let [receivedCredDefId, receivedCredDef] = await getCredDef(poolHandle, did, item['cred_def_id']);
+        credDefs[receivedCredDefId] = receivedCredDef;
+
+        if (item.rev_reg_seq_no) {
+            // TODO Create Revocation States
+        }
+    }
+
+    return [schemas, credDefs, revStates];
+}
+
+
+async function verifierGetEntitiesFromLedger(poolHandle, did, identifiers, actor) {
+    let schemas = {};
+    let credDefs = {};
+    let revRegDefs = {};
+    let revRegs = {};
+
+    for(let referent of Object.keys(identifiers)) {
+        let item = identifiers[referent];
+        console.log(`"${actor}" -> Get Schema from Ledger`);
+        let [receivedSchemaId, receivedSchema] = await getSchema(poolHandle, did, item['schema_id']);
+        schemas[receivedSchemaId] = receivedSchema;
+
+        console.log(`"${actor}" -> Get Claim Definition from Ledger`);
+        let [receivedCredDefId, receivedCredDef] = await getCredDef(poolHandle, did, item['cred_def_id']);
+        credDefs[receivedCredDefId] = receivedCredDef;
+
+        if (item.rev_reg_seq_no) {
+            // TODO Get Revocation Definitions and Revocation Registries
+        }
+    }
+
+    return [schemas, credDefs, revRegDefs, revRegs];
+}
+
+
 // const createUserWallet = async (name,id, key, refid) => {
 //     const user = {
 //         name,
@@ -56,4 +108,4 @@ const sendNym = async (poolHandle, walletHandle, Did, newDid, newKey, role=null)
 //     return [did, verkey]
 // }
 
-module.exports = {poolCreation, sendNym, poolHandle}
+module.exports = {poolCreation, sendNym, poolHandle, proverGetEntitiesFromLedger, verifierGetEntitiesFromLedger}
