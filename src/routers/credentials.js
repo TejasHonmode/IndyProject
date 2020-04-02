@@ -1,23 +1,24 @@
 const express = require('express')
 const router = new express.Router()
 const auth = require('../middleware/auth')
-const User = require('../models/user')
-const CredentialSchema = require('../models/credentialSchema')
+const User = require('../models/user/user')
+const CredentialSchema = require('../models/credential/credentialSchema')
 const credentialsFunc = require('../functions/credentials')
 const pool = require('../functions/pool')
-const DidKeyPair = require('../models/didKeyPair')
-const CredentialDefinition = require('../models/credentialDefinition')
-const Sample = require('../models/sample')
+const DidKeyPair = require('../models/user/didKeyPair')
+const CredentialDefinition = require('../models/credential/credentialDefinition')
+const Sample = require('../models/user/sample')
 const bson = require('bson')
 const indy = require('indy-sdk')
 const userFuncs = require('../functions/user')
-const CredentialOffer = require('../models/credentialOffer')
+const CredentialOffer = require('../models/credential/credentialOffer')
 const encryption = require('../functions/encryption')
-const CredentialRequest = require('../models/credentialRequest')
+const CredentialRequest = require('../models/credential/credentialRequest')
 const utf8 = require('utf8')
-const CredentialOfferJson = require('../models/credentialOfferJson')
-const Credential = require('../models/credSchema')
-const CredentialReqMetadataJson = require('../models/credentialRequestMetadataJson')
+const CredentialOfferJson = require('../models/credential/credentialOfferJson')
+const Credential = require('../models/credential/credSchema')
+const CredentialReqMetadataJson = require('../models/credential/credentialRequestMetadataJson')
+const MasterSecret = require('../models/user/masterSecret')
 
 
 router.post('/createSchema', auth, async(req, res) => {
@@ -256,7 +257,15 @@ router.post('/createCredentialRequest', auth, async(req, res) => {
 
         await credReqMetadataJSON.save()
 
-        res.send({offerJSON, decryptedOffer, credDefInfo, credentialRequestInfo, credentialRequest, offerjson, credReqMetadataJSON})
+        let masterSecret = new MasterSecret({
+            did: me.did,
+            message: masterSecretId,
+            owner: req.user._id
+        })
+
+        await masterSecret.save()
+
+        res.send({offerJSON, decryptedOffer, credDefInfo, credentialRequestInfo, credentialRequest, offerjson, credReqMetadataJSON, masterSecret})
     } catch (e) {
         res.send(e)
     }

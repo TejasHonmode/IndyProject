@@ -1,9 +1,9 @@
 const express = require('express')
 const router = new express.Router()
 const auth = require('../middleware/auth')
-const User = require('../models/user')
+const User = require('../models/user/user')
 const userFuncs = require('../functions/user')
-const DidKeyPair = require('../models/didKeyPair')
+const DidKeyPair = require('../models/user/didKeyPair')
 
 router.post('/createDidVerkey', auth,async(req, res) => {
     
