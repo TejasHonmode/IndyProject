@@ -1,4 +1,5 @@
 const indy = require('indy-sdk')
+const credentialFunc = require('../functions/credentials')
 
 // const pool_ = {}
 let poolHandle = 0;
@@ -41,12 +42,15 @@ async function proverGetEntitiesFromLedger(poolHandle, did, identifiers, actor) 
     for(let referent of Object.keys(identifiers)) {
         let item = identifiers[referent];
         console.log(`\"${actor}\" -> Get Schema from Ledger`);
-        let [receivedSchemaId, receivedSchema] = await getSchema(poolHandle, did, item['schema_id']);
-        schemas[receivedSchemaId] = receivedSchema;
+        // receivedSchemaId, receivedSchema
+        console.log('ITEM---------------------->', item)
+        let receivedSchema = await credentialFunc.getSchema(did, item['schema_id'], poolHandle);
+        schemas[receivedSchema.schemaId] = receivedSchema.schema;
 
         console.log(`\"${actor}\" -> Get Claim Definition from Ledger`);
-        let [receivedCredDefId, receivedCredDef] = await getCredDef(poolHandle, did, item['cred_def_id']);
-        credDefs[receivedCredDefId] = receivedCredDef;
+        // [receivedCredDefId, receivedCredDef]
+        let receivedCredDef = await credentialFunc.getCredDef(poolHandle, did, item['cred_def_id']);
+        credDefs[receivedCredDef.credDefId] = receivedCredDef.credDef;
 
         if (item.rev_reg_seq_no) {
             // TODO Create Revocation States
@@ -66,12 +70,14 @@ async function verifierGetEntitiesFromLedger(poolHandle, did, identifiers, actor
     for(let referent of Object.keys(identifiers)) {
         let item = identifiers[referent];
         console.log(`"${actor}" -> Get Schema from Ledger`);
-        let [receivedSchemaId, receivedSchema] = await getSchema(poolHandle, did, item['schema_id']);
-        schemas[receivedSchemaId] = receivedSchema;
+        // [receivedSchemaId, receivedSchema]
+        let receivedSchema = await credentialFunc.getSchema(did, item['schema_id'], poolHandle);
+        schemas[receivedSchema.schemaId] = receivedSchema.schema;
 
         console.log(`"${actor}" -> Get Claim Definition from Ledger`);
-        let [receivedCredDefId, receivedCredDef] = await getCredDef(poolHandle, did, item['cred_def_id']);
-        credDefs[receivedCredDefId] = receivedCredDef;
+        // [receivedCredDefId, receivedCredDef]
+        let receivedCredDef = await credentialFunc.getCredDef(poolHandle, did, item['cred_def_id']);
+        credDefs[receivedCredDef.credDefId] = receivedCredDef.credDef;
 
         if (item.rev_reg_seq_no) {
             // TODO Get Revocation Definitions and Revocation Registries

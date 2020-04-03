@@ -427,9 +427,33 @@ router.post('/sample',async (req, res) => {
     // let n = int
 
     // let s = n.toString()
-    let m = await indy.generateNonce()
+    // let m = await indy.generateNonce()
     // res.send({cr, fromVerkey, decryptedMsgJSON, decryptedMsg, messageUTF, normal})
-    res.send({m})
+    
+    let a = []
+    let b = {a:'hello', b: 'bye', c: 'cunt'}
+    
+    a = Object.keys(b)
+    
+    for(keys of Object.keys(b)){
+        console.log(b[`${keys}`]);
+        
+    }
+    key = 'hell'
+    b.d = 'gumgum'
+    b[key] = 'jum'
+
+    let sample = new Sample({
+        did: Object.keys(b)
+    })
+    await sample.save()
+
+    let arr = ['hello', 'kill', 'goodBye']
+    for(ar of arr){
+        console.log(ar)
+    }
+    
+    res.send({a,b, sample})
 })
 
 module.exports = router

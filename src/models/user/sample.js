@@ -3,13 +3,9 @@ const validator = require('validator')
 
 
 const sampleSchema = new mongoose.Schema({
-    
-    data: {
-        type: Buffer
-    },
+
     did:{
-        type: String,
-        required: true
+        type: [String]
     }
 })
 
