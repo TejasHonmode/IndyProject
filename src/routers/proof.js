@@ -321,7 +321,7 @@ router.post('/verifyProof', auth, async(req, res) => {
 
         console.log('PROOF VERIFIED--------------------------------->')
         // for()
-
+        res.send({senderDid: req.body.recipientDid, msg: "Proof Verified"})
     } catch (e) {
         res.send(e)
     }
