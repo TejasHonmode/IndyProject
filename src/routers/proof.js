@@ -198,8 +198,8 @@ router.post('/sendProof', auth, async(req, res) => {
         }
         let j=0
         for(let attr_referent of requested_referents){
-                console.log()
-                reqCredJson.requested_attributes[`${attr_referent}`] = {'cred_id': credsForAttrsJson[`${attr_referent}`][referent], 'revealed': true}
+                console.log(credsForAttrsJson[`${attr_referent}`])
+                reqCredJson.requested_attributes[`${attr_referent}`] = {'cred_id': credsForAttrsJson[`${attr_referent}`].referent, 'revealed': true}
                 j = j+1
                 console.log('j------------------------------------>', j);
                 
@@ -207,7 +207,8 @@ router.post('/sendProof', auth, async(req, res) => {
 
         let k=0
         for(let predicate_referent of predicate_referents){
-            reqCredJson.requested_predicates[`${predicate_referent}`] = {'cred_id': credsForAttrsJson[`${predicate_referent}`][referent]}
+            console.log(credsForAttrsJson[`${predicate_referent}`]);
+            reqCredJson.requested_predicates[`${predicate_referent}`] = {'cred_id': credsForAttrsJson[`${predicate_referent}`].referent}
             k = k+1
             console.log('k----------------------------------------------->', k);
             
@@ -217,7 +218,7 @@ router.post('/sendProof', auth, async(req, res) => {
         let masterSecretId = await MasterSecret.findOne({owner: req.user._id})
         console.log('MASTER SECRET ID------------------------------------------------------------------------------------------------>', masterSecretId);
         
-        let proofJson = await indy.proverCreateProof(req.user.userWalletHandle, authDecryptProofreqJson, reqCredJson, masterSecretId, schemaJson, credDefJson, revocStatesJson)
+        let proofJson = await indy.proverCreateProof(req.user.userWalletHandle, authDecryptProofreqJson, reqCredJson, masterSecretId.message, schemasJson, credDefsJson, revocStatesJson)
         console.log('PROOF JSON---------------------------------------------------------------------------------------------------->', proofJson);
         
         let authCryptProof = await encryption.authCrypt(req.user.userWalletHandle, meVerkey, forMeVerkey, proofJson)
