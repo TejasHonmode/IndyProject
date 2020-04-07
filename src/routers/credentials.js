@@ -379,6 +379,22 @@ router.get('/storeCredential', auth, async(req, res) => {
 })
 
 
+router.post('/getCredentials', auth,async(req, res) => {
+
+    try {
+        if (req.body.filter) {
+            let credentials = await credentialsFunc.getCredentials(req.user.userWalletHandle, req.body.filter)
+            return res.send(credentials)
+        } else {
+            let credentials = await credentialsFunc.getCredentials(req.user.userWalletHandle)
+            return res.send(credentials)
+        }
+    } catch (e) {
+        res.send(e)
+    }
+})
+
+
 
 router.post('/sample',async (req, res) => {
     // console.log(encodeURIComponent(req.body.enc))

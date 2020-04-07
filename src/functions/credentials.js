@@ -146,5 +146,12 @@ const storeCredential = async(userWalletHandle, credReqMetadataJSON, decryptCred
     return outSchemaId
 }
 
-module.exports = {sendSchema, getSchema, createSchema, sendCredDef, getCredDef, createCredDef, createCredentialOffer, createMasterSecret, createCredentialRequest, createCredential, storeCredential}
+
+const getCredentials = async(userWalletHandle, filter=null) => {
+
+    let credentials = await indy.proverGetCredentials(userWalletHandle, filter)
+    return credentials
+}
+
+module.exports = {sendSchema, getSchema, createSchema, sendCredDef, getCredDef, createCredDef, createCredentialOffer, createMasterSecret, createCredentialRequest, createCredential, storeCredential, getCredentials}
 

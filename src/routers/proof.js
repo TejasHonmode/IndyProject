@@ -306,18 +306,18 @@ router.post('/verifyProof', auth, async(req, res) => {
         let i=0
         for(self_attested_referent of normalProofReq.self_attested_referents){
             console.log(i)
-            assert(self_attested_values[Object.keys(self_attested_values)[i]] === decryptedProof['requested_proof']['self_attested_attrs'][self_attested_referent])
+            assert(self_attested_values[Object.keys(self_attested_values)[i]] === decryptedProof['requested_proof']['self_attested_attrs'][self_attested_referent], self_attested_referent+' does not match')
             i=i+1
         }
 
         let j=0
         for(requested_referent of normalProofReq.requested_referents){
             console.log(j)
-            assert(requested_values[Object.keys(requested_values)[j]] === decryptedProof['requested_proof']['revealed_attrs'][requested_referent]['raw'])
+            assert(requested_values[Object.keys(requested_values)[j]] === decryptedProof['requested_proof']['revealed_attrs'][requested_referent]['raw'], requested_referent+' does not match')
             j=j+1
         }
 
-        assert(await indy.verifierVerifyProof(JSON.parse(normalProofReq.message), decryptedProofJson, schemasJson, credDefsJson, revocRefDefsJson, revocRegsJson))
+        assert(await indy.verifierVerifyProof(JSON.parse(normalProofReq.message), decryptedProofJson, schemasJson, credDefsJson, revocRefDefsJson, revocRegsJson), 'Proof does not match')
 
         console.log('PROOF VERIFIED--------------------------------->')
         // for()
